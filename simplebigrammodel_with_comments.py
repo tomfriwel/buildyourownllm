@@ -37,6 +37,20 @@ class BigramLanguageModel():
         return self.forward(x)
     
     def forward(self, idx: List[List[int]]) -> List[List[List[float]]]:
+        '''
+        输入idx，是一个二维数组，如[[1, 2, 3],
+                                  [4, 5, 6]]
+        表示同时希望推理的多个序列
+
+        输出是一个三维数组，如[[[0.1, 0.2, 0.3, .. (vocab_size)],
+                                [0.4, 0.5, 0.6, .. (vocab_size)],
+                                [0.7, 0.8, 0.9, .. (vocab_size)]],
+
+                               [[0.2, 0.3, 0.4, .. (vocab_size)],
+                                [0.5, 0.6, 0.7, .. (vocab_size)],
+                                [0.8, 0.9, 1.0, .. (vocab_size)]]]
+        
+        '''
         B = len(idx)  # 批次大小
         T = len(idx[0])  # 每一批的序列长度
         
@@ -58,9 +72,13 @@ class BigramLanguageModel():
         for _ in range(max_new_tokens):
             logits_batch = self(idx)
             for batch_idx, logits in enumerate(logits_batch):
+                # 我们计算了每一个token的下一个token的概率
+                # 但实际上我们只需要最后一个token的“下一个token的概率”
                 logits = logits[-1]
                 total = max(sum(logits),1)
+                # 归一化
                 logits = [logit / total for logit in logits]
+                # 根据概率随机采样
                 next_token = random.choices(
                     range(self.vocab_size),
                     weights=logits,
@@ -70,6 +88,16 @@ class BigramLanguageModel():
         return idx
     
 def get_batch(tokens, batch_size, block_size):
+    '''
+    随机获取一批数据x和y用于训练
+    x和y都是二维数组，可以用于并行训练
+    其中y数组内的每一个值，都是x数组内对应位置的值的下一个值
+    格式如下：
+    x = [[1, 2, 3],
+         [9, 10, 11]]
+    y = [[2, 3, 4],
+         [10, 11, 12]]
+    '''
     ix = random.choices(range(len(tokens) - block_size), k=batch_size)
     x, y = [], []
     for i in ix:
