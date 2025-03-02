@@ -53,9 +53,9 @@ for epoch in range(epochs):
     loss = criterion(y_pred, y_train)
     
     # 反向传播，修改模型参数
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+    optimizer.zero_grad() # 清除旧的梯度
+    loss.backward() # 计算新的梯度 
+    optimizer.step() # 更新参数：参数 -= 学习率 * 梯度
     
     if (epoch + 1) % 100 == 0:
         w = model.linear.weight.item()
