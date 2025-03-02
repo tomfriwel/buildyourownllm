@@ -27,7 +27,7 @@ generated_token = encode(prompt)
 for i in range(max_new_token - 1):
     current_token_id = generated_token[-1]
     logits = transition[current_token_id]
-    total = sum(logits)
+    total = max(sum(logits),1)
     logits = [logit / total for logit in logits]
     next_token_id = random.choices(range(vocab_size), weights=logits, k=1)[0]
     generated_token.append(next_token_id)

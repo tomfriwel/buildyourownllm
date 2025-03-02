@@ -36,7 +36,7 @@ generated_token = encode(prompt)
 for i in range(max_new_token - 1):
     current_token_id = generated_token[-1]
     logits = transition[current_token_id]
-    total = sum(logits)
+    total = max(sum(logits),1)
     # 归一化前 logits = [0, 10, ...., 298,..., 88, ..., 13, 0]
     #         len(logits) = vocab_size, sum(logits) = 6664
     # 归一化后 logits = [0/6664, 10/6664, ...., 298/6664,..., 88/6664, ..., 13/6664, 0/6664]
