@@ -31,8 +31,7 @@ for i in range(len(text) - 1):
     next_token_id = encode(text[i + 1])[0]
     transition[current_token_id][next_token_id] += 1
 
-start_token_id = encode(prompt)[-1]
-generated_token = [start_token_id]
+generated_token = encode(prompt)
 
 for i in range(max_new_token - 1):
     current_token_id = generated_token[-1]
