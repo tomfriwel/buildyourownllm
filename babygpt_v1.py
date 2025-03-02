@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from typing import List
+import time
 
 torch.manual_seed(42)
 
@@ -102,6 +103,9 @@ model = BabyGPT(vocab_size, n_embed).to(device)
 # 训练
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
+start_time = time.time()
+tokens_processed = 0
+
 for iter in range(max_iters):
     x, y = get_batch(data['train'], batch_size, block_size)
     logits, loss = model(x, y)
@@ -109,10 +113,14 @@ for iter in range(max_iters):
     loss.backward()
     optimizer.step()
 
+    tokens_processed += batch_size * block_size
+
     # every once in a while evaluate the loss on train and val sets
     if iter % eval_interval == 0:
+        elapsed = time.time() - start_time
+        tokens_per_sec = tokens_processed / elapsed if elapsed > 0 else 0
         losses = estimate_loss(model, data, batch_size, block_size, eval_iters)
-        print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, speed: {tokens_per_sec:.2f} tokens/sec")
 
 # 推理
 prompt_tokens = torch.stack([torch.tensor(tokenizer.encode(p)).to(device) for p in prompts])
