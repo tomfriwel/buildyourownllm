@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import random
 from typing import List
 
@@ -7,11 +8,11 @@ torch.manual_seed(42)
 
 prompts = ["春江", "往事"]
 max_new_token = 100
-max_iters = 8000
+max_iters = 5000
 batch_size = 32
 block_size = 8
 
-device = 'cpu'
+device = 'cpu' #'cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu'
 
 with open('ci.txt', 'r', encoding='utf-8') as f:
     text = f.read()
@@ -29,19 +30,27 @@ class Tokenizer:
     def decode(self, l: List[int]) -> str:
         return ''.join([self.itos[i] for i in l])
 
-class BigramLanguageModel:
+class BigramLanguageModel():
     def __init__(self, vocab_size: int):
         self.vocab_size = vocab_size
         self.transition = torch.zeros((vocab_size, vocab_size), device=device)
-        
+    
+    def __call__(self, x):
+        return self.forward(x)
+    
     def forward(self, idx: torch.Tensor) -> torch.Tensor:
         # idx shape: (B, T)
-        return self.transition[idx]  # shape: (B, T, vocab_size)
+        B, T = idx.shape
+        result = torch.zeros((B, T, self.vocab_size), device=device)
+        for b in range(B):
+            for t in range(T):
+                result[b][t] = self.transition[idx[b][t]]
+        return result  # shape: (B, T, vocab_size)
 
     def generate(self, idx: torch.Tensor, max_new_tokens: int) -> torch.Tensor:
         for _ in range(max_new_tokens):
             # 获取最后一个token的预测
-            logits = self.forward(idx)[:, -1, :]  # (B, vocab_size)
+            logits = self(idx)[:, -1, :]  # (B, vocab_size)
             # 将计数转换为概率
             probs = logits / torch.clamp(logits.sum(dim=-1, keepdim=True), min=1.0)
             # 采样下一个token
