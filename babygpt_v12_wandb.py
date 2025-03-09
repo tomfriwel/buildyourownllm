@@ -224,3 +224,141 @@ for tokens in result:
 save_path = 'model.pth'
 torch.save(model.state_dict(), save_path)
 print(f"模型已保存到{save_path}")
+'''
+simpx@ThePC:~/buildyourownllm$ python babygpt_v12_wandb.py
+wandb: Using wandb-core as the SDK backend. Please refer to https://wandb.me/wandb-core for more information.
+wandb: Currently logged in as: simpxx (simpxx-zhejiang-university). Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.18.3
+wandb: Run data is saved locally in /home/simpx/buildyourownllm/wandb/run-20250309_235239-ysgr3tei
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run absurd-frog-1
+wandb: ⭐️ View project at https://wandb.ai/simpxx-zhejiang-university/babygpt
+wandb: 🚀 View run at https://wandb.ai/simpxx-zhejiang-university/babygpt/runs/ysgr3tei
+step 0: train loss 8.0529, val loss 8.0512, speed: 55304.00 tokens/sec, time: 0m 0.3s
+step 50: train loss 5.9337, val loss 6.0072, speed: 102707.49 tokens/sec, time: 0m 8.1s
+step 100: train loss 5.7529, val loss 5.8782, speed: 104971.14 tokens/sec, time: 0m 15.8s
+step 150: train loss 5.4843, val loss 5.6578, speed: 105831.56 tokens/sec, time: 0m 23.4s
+step 200: train loss 5.2826, val loss 5.4927, speed: 106169.27 tokens/sec, time: 0m 31.0s
+step 250: train loss 5.1371, val loss 5.3766, speed: 105984.49 tokens/sec, time: 0m 38.8s
+step 300: train loss 5.0116, val loss 5.2703, speed: 105957.57 tokens/sec, time: 0m 46.5s
+step 350: train loss 4.9237, val loss 5.1528, speed: 106056.41 tokens/sec, time: 0m 54.2s
+step 400: train loss 4.8080, val loss 5.0865, speed: 105914.43 tokens/sec, time: 1m 2.0s
+step 450: train loss 4.7279, val loss 4.9910, speed: 105835.10 tokens/sec, time: 1m 9.8s
+step 500: train loss 4.6646, val loss 4.9363, speed: 105850.83 tokens/sec, time: 1m 17.5s
+step 550: train loss 4.6004, val loss 4.8573, speed: 105825.23 tokens/sec, time: 1m 25.3s
+step 600: train loss 4.5383, val loss 4.8317, speed: 105717.62 tokens/sec, time: 1m 33.1s
+step 650: train loss 4.4883, val loss 4.7752, speed: 105713.79 tokens/sec, time: 1m 40.9s
+step 700: train loss 4.4415, val loss 4.7334, speed: 105657.30 tokens/sec, time: 1m 48.7s
+step 750: train loss 4.4077, val loss 4.7024, speed: 105533.37 tokens/sec, time: 1m 56.6s
+step 800: train loss 4.3546, val loss 4.6546, speed: 105446.23 tokens/sec, time: 2m 4.5s
+step 850: train loss 4.3154, val loss 4.6399, speed: 105418.73 tokens/sec, time: 2m 12.3s
+step 900: train loss 4.2720, val loss 4.5936, speed: 105405.89 tokens/sec, time: 2m 20.0s
+step 950: train loss 4.2308, val loss 4.5587, speed: 105314.04 tokens/sec, time: 2m 27.9s
+step 1000: train loss 4.1714, val loss 4.5141, speed: 105286.65 tokens/sec, time: 2m 35.8s
+step 1050: train loss 4.1327, val loss 4.4774, speed: 105286.05 tokens/sec, time: 2m 43.6s
+step 1100: train loss 4.1021, val loss 4.4610, speed: 105221.62 tokens/sec, time: 2m 51.4s
+step 1150: train loss 4.0632, val loss 4.4143, speed: 105132.34 tokens/sec, time: 2m 59.4s
+step 1200: train loss 4.0170, val loss 4.3883, speed: 105118.14 tokens/sec, time: 3m 7.2s
+step 1250: train loss 3.9844, val loss 4.3670, speed: 105053.55 tokens/sec, time: 3m 15.1s
+step 1300: train loss 3.9601, val loss 4.3501, speed: 105018.94 tokens/sec, time: 3m 23.0s
+step 1350: train loss 3.9226, val loss 4.3310, speed: 105021.13 tokens/sec, time: 3m 30.8s
+step 1400: train loss 3.9077, val loss 4.3136, speed: 105022.69 tokens/sec, time: 3m 38.6s
+step 1450: train loss 3.8786, val loss 4.2988, speed: 104984.37 tokens/sec, time: 3m 46.4s
+step 1500: train loss 3.8503, val loss 4.2784, speed: 104971.83 tokens/sec, time: 3m 54.3s
+step 1550: train loss 3.8237, val loss 4.2614, speed: 105000.23 tokens/sec, time: 4m 2.0s
+step 1600: train loss 3.8005, val loss 4.2503, speed: 104940.92 tokens/sec, time: 4m 10.0s
+step 1650: train loss 3.7833, val loss 4.2264, speed: 104912.89 tokens/sec, time: 4m 17.8s
+step 1700: train loss 3.7564, val loss 4.2210, speed: 104901.07 tokens/sec, time: 4m 25.7s
+step 1750: train loss 3.7411, val loss 4.2056, speed: 104898.69 tokens/sec, time: 4m 33.5s
+step 1800: train loss 3.7157, val loss 4.1930, speed: 104873.22 tokens/sec, time: 4m 41.4s
+step 1850: train loss 3.7006, val loss 4.1794, speed: 104863.20 tokens/sec, time: 4m 49.2s
+step 1900: train loss 3.6843, val loss 4.1722, speed: 104882.90 tokens/sec, time: 4m 57.0s
+step 1950: train loss 3.6611, val loss 4.1588, speed: 104856.16 tokens/sec, time: 5m 4.8s
+step 2000: train loss 3.6367, val loss 4.1533, speed: 104850.75 tokens/sec, time: 5m 12.7s
+step 2050: train loss 3.6267, val loss 4.1479, speed: 104864.62 tokens/sec, time: 5m 20.4s
+step 2100: train loss 3.6099, val loss 4.1354, speed: 104856.72 tokens/sec, time: 5m 28.3s
+step 2150: train loss 3.5858, val loss 4.1333, speed: 104843.06 tokens/sec, time: 5m 36.1s
+step 2200: train loss 3.5709, val loss 4.1218, speed: 104849.82 tokens/sec, time: 5m 43.9s
+step 2250: train loss 3.5582, val loss 4.1131, speed: 104850.15 tokens/sec, time: 5m 51.7s
+step 2300: train loss 3.5357, val loss 4.1120, speed: 104831.06 tokens/sec, time: 5m 59.6s
+step 2350: train loss 3.5118, val loss 4.0939, speed: 104825.04 tokens/sec, time: 6m 7.5s
+step 2400: train loss 3.5005, val loss 4.0901, speed: 104830.41 tokens/sec, time: 6m 15.3s
+step 2450: train loss 3.4825, val loss 4.0816, speed: 104805.55 tokens/sec, time: 6m 23.2s
+step 2500: train loss 3.4722, val loss 4.0818, speed: 104779.64 tokens/sec, time: 6m 31.1s
+step 2550: train loss 3.4665, val loss 4.0707, speed: 104757.95 tokens/sec, time: 6m 39.0s
+step 2600: train loss 3.4408, val loss 4.0571, speed: 104731.84 tokens/sec, time: 6m 46.9s
+step 2650: train loss 3.4208, val loss 4.0688, speed: 104714.74 tokens/sec, time: 6m 54.8s
+step 2700: train loss 3.4150, val loss 4.0522, speed: 104683.38 tokens/sec, time: 7m 2.7s
+step 2750: train loss 3.3950, val loss 4.0587, speed: 104653.32 tokens/sec, time: 7m 10.7s
+step 2800: train loss 3.3766, val loss 4.0551, speed: 104641.89 tokens/sec, time: 7m 18.6s
+step 2850: train loss 3.3687, val loss 4.0322, speed: 104614.46 tokens/sec, time: 7m 26.5s
+step 2900: train loss 3.3526, val loss 4.0499, speed: 104592.41 tokens/sec, time: 7m 34.4s
+step 2950: train loss 3.3370, val loss 4.0578, speed: 104570.12 tokens/sec, time: 7m 42.4s
+step 3000: train loss 3.3397, val loss 4.0406, speed: 104554.37 tokens/sec, time: 7m 50.3s
+step 3050: train loss 3.3131, val loss 4.0303, speed: 104535.27 tokens/sec, time: 7m 58.2s
+step 3100: train loss 3.3021, val loss 4.0228, speed: 104519.41 tokens/sec, time: 8m 6.1s
+step 3150: train loss 3.2889, val loss 4.0201, speed: 104497.58 tokens/sec, time: 8m 14.0s
+step 3200: train loss 3.2807, val loss 4.0175, speed: 104486.57 tokens/sec, time: 8m 21.9s
+step 3250: train loss 3.2538, val loss 4.0151, speed: 104468.23 tokens/sec, time: 8m 29.9s
+step 3300: train loss 3.2548, val loss 4.0097, speed: 104448.18 tokens/sec, time: 8m 37.8s
+step 3350: train loss 3.2381, val loss 4.0185, speed: 104429.51 tokens/sec, time: 8m 45.7s
+step 3400: train loss 3.2277, val loss 4.0254, speed: 104427.55 tokens/sec, time: 8m 53.6s
+step 3450: train loss 3.2160, val loss 4.0147, speed: 104432.55 tokens/sec, time: 9m 1.4s
+step 3500: train loss 3.2007, val loss 4.0030, speed: 104428.53 tokens/sec, time: 9m 9.3s
+step 3550: train loss 3.1943, val loss 4.0054, speed: 104417.01 tokens/sec, time: 9m 17.2s
+step 3600: train loss 3.1846, val loss 4.0042, speed: 104423.69 tokens/sec, time: 9m 25.0s
+step 3650: train loss 3.1658, val loss 4.0055, speed: 104431.37 tokens/sec, time: 9m 32.8s
+step 3700: train loss 3.1568, val loss 3.9942, speed: 104420.45 tokens/sec, time: 9m 40.7s
+step 3750: train loss 3.1496, val loss 3.9841, speed: 104423.38 tokens/sec, time: 9m 48.5s
+step 3800: train loss 3.1345, val loss 4.0056, speed: 104437.50 tokens/sec, time: 9m 56.3s
+step 3850: train loss 3.1139, val loss 3.9984, speed: 104433.59 tokens/sec, time: 10m 4.2s
+step 3900: train loss 3.1084, val loss 3.9971, speed: 104434.62 tokens/sec, time: 10m 12.0s
+step 3950: train loss 3.0957, val loss 3.9887, speed: 104445.03 tokens/sec, time: 10m 19.8s
+step 4000: train loss 3.0868, val loss 3.9860, speed: 104445.87 tokens/sec, time: 10m 27.6s
+step 4050: train loss 3.0764, val loss 3.9925, speed: 104440.74 tokens/sec, time: 10m 35.5s
+step 4100: train loss 3.0676, val loss 3.9859, speed: 104438.08 tokens/sec, time: 10m 43.4s
+step 4150: train loss 3.0623, val loss 4.0036, speed: 104427.32 tokens/sec, time: 10m 51.3s
+step 4200: train loss 3.0498, val loss 3.9939, speed: 104425.85 tokens/sec, time: 10m 59.1s
+step 4250: train loss 3.0349, val loss 3.9905, speed: 104423.34 tokens/sec, time: 11m 7.0s
+step 4300: train loss 3.0235, val loss 3.9972, speed: 104419.05 tokens/sec, time: 11m 14.9s
+step 4350: train loss 3.0172, val loss 3.9864, speed: 104413.54 tokens/sec, time: 11m 22.7s
+step 4400: train loss 2.9990, val loss 3.9889, speed: 104408.48 tokens/sec, time: 11m 30.6s
+step 4450: train loss 2.9856, val loss 3.9947, speed: 104399.48 tokens/sec, time: 11m 38.5s
+step 4500: train loss 2.9855, val loss 3.9878, speed: 104393.24 tokens/sec, time: 11m 46.4s
+step 4550: train loss 2.9820, val loss 3.9869, speed: 104386.86 tokens/sec, time: 11m 54.3s
+step 4600: train loss 2.9620, val loss 4.0056, speed: 104382.30 tokens/sec, time: 12m 2.2s
+step 4650: train loss 2.9587, val loss 3.9961, speed: 104378.51 tokens/sec, time: 12m 10.1s
+step 4700: train loss 2.9472, val loss 3.9785, speed: 104375.66 tokens/sec, time: 12m 17.9s
+step 4750: train loss 2.9422, val loss 3.9992, speed: 104371.38 tokens/sec, time: 12m 25.8s
+step 4800: train loss 2.9254, val loss 3.9912, speed: 104366.40 tokens/sec, time: 12m 33.7s
+step 4850: train loss 2.9172, val loss 3.9920, speed: 104367.46 tokens/sec, time: 12m 41.5s
+step 4900: train loss 2.9117, val loss 3.9990, speed: 104355.06 tokens/sec, time: 12m 49.5s
+step 4950: train loss 2.8944, val loss 3.9963, speed: 104340.95 tokens/sec, time: 12m 57.4s
+春江水似流。
+
+临江仙 陈允平
+红柳依然蝴蝶乱，汝江桥。
+剪轻鸥荐日飞来。
+叠叠匀酥相半掩，霏霏残梦归郎乱注疏篱。
+属车忽到谢仙归。
+毕竟归来如梦去，会容觞咏再来期。
+
+一翦梅 陈允平
+芍药闲来草碧初。
+
+----------
+往事，恨功名淡泪眼垂些。
+幅酒难禁。
+无缘一点恩光万红成。
+而今宁许我堪歌更擘划，无计是愁人。
+
+临江仙 魏了翁
+思深契阔隐驹重，却倾不惜伤牵。
+尊频劝客莫徘徊。
+舣舟方把柂，更须取易相随。
+无风吹我鬓毛
+----------
+模型已保存到model.pth
+wandb: 🚀 View run absurd-frog-1 at: https://wandb.ai/simpxx-zhejiang-university/babygpt/runs/ysgr3tei
+wandb: Find logs at: wandb/run-20250309_235239-ysgr3tei/logs
+'''
