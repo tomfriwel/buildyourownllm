@@ -54,8 +54,9 @@ class FeedFoward(nn.Module):
     def __init__(self, n_embed):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(n_embed, n_embed),
+            nn.Linear(n_embed, n_embed * 4),
             nn.ReLU(), # 把负值变为0，正直不变的激活函数
+            nn.Linear(n_embed * 4, n_embed),
         )
     def forward(self, x):
         return self.net(x)
@@ -64,9 +65,11 @@ class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, head_size):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
+        self.proj = nn.Linear(n_embed, n_embed) # 投影层，把多头注意力的输出映射回n_embed维度
 
     def forward(self, x):
-        return torch.cat([h(x) for h in self.heads], dim=-1)
+        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        return self.proj(out)
 
 class Head(nn.Module):
     def __init__(self, head_size):
