@@ -44,10 +44,12 @@ class Block(nn.Module):
         head_size = n_embed // n_head
         self.sa = MultiHeadAttention(n_head, head_size)
         self.ffwd = FeedFoward(n_embed)
+        self.ln1 = nn.LayerNorm(n_embed) # layer norm layer
+        self.ln2 = nn.LayerNorm(n_embed)
 
     def forward(self, x):
-        x = x + self.sa(x) # 使用了残差连接，保留原来的x信息，避免梯度消失
-        x = x + self.ffwd(x)
+        x = x + self.sa(self.ln1(x)) # 使用了残差连接，保留原来的x信息，避免梯度消失
+        x = x + self.ffwd(self.ln2(x))
         return x
 
 class FeedFoward(nn.Module):
@@ -99,6 +101,7 @@ class BabyGPT(nn.Module):
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd) # 嵌入层，把token映射到n_embd维空间
         self.postion_embedding_table = nn.Embedding(block_size, n_embed) # 建设一个“位置”映射关系
         self.blocks = nn.Sequential(*[Block(n_embed, n_head=n_head) for _ in range(n_layer)])
+        self.ln_final = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embd, vocab_size) # 线性层，把n_embd维空间映射到vocab_size维空间，
 
     def forward(self, idx, targets=None):
@@ -109,6 +112,7 @@ class BabyGPT(nn.Module):
         pos_emb = self.postion_embedding_table(torch.arange(T, device=idx.device)) # 获得位置的嵌入表示 (T,n_embd)
         x = tok_emb + pos_emb # 给token的嵌入表示加上位置的嵌入表示，x有了“位置”信息！
         x = self.blocks(x)
+        x = self.ln_final(x)
         logits = self.lm_head(x) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)
 
         if targets is None: # 推理场景，不需要计算损失值
