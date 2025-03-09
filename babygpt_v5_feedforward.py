@@ -37,6 +37,16 @@ class Tokenizer:
     def decode(self, l: List[int]) -> str:
         return ''.join([self.itos[i] for i in l])
 
+class FeedFoward(nn.Module):
+    def __init__(self, n_embed):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embed, n_embed),
+            nn.ReLU(), # 把负值变为0，正直不变的激活函数
+        )
+    def forward(self, x):
+        return self.net(x)
+
 class MultiHeadAttention(nn.Module):
     def __init__(self, num_heads, head_size):
         super().__init__()
@@ -74,6 +84,7 @@ class BabyGPT(nn.Module):
         self.postion_embedding_table = nn.Embedding(block_size, n_embed) # 建设一个“位置”映射关系
         self.sa_heads = MultiHeadAttention(n_head, n_embed//n_head) # 从单头变多heads的注意力，但每个heads size变小了
         self.lm_head = nn.Linear(n_embd, vocab_size) # 线性层，把n_embd维空间映射到vocab_size维空间，
+        self.ffwd = FeedFoward(n_embed)
 
     def forward(self, idx, targets=None):
         B, T = idx.shape # B是batch size，T是block size
@@ -83,6 +94,7 @@ class BabyGPT(nn.Module):
         pos_emb = self.postion_embedding_table(torch.arange(T, device=idx.device)) # 获得位置的嵌入表示 (T,n_embd)
         x = tok_emb + pos_emb # 给token的嵌入表示加上位置的嵌入表示，x有了“位置”信息！
         x = self.sa_heads(x) # self-attention
+        x = self.ffwd(x)
         logits = self.lm_head(x) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)
 
         if targets is None: # 推理场景，不需要计算损失值
