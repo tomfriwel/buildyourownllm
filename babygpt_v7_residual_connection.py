@@ -46,8 +46,8 @@ class Block(nn.Module):
         self.ffwd = FeedFoward(n_embed)
 
     def forward(self, x):
-        x = self.sa(x)
-        x = self.ffwd(x)
+        x = x + self.sa(x) # 使用了残差连接，保留原来的x信息，避免梯度消失
+        x = x + self.ffwd(x)
         return x
 
 class FeedFoward(nn.Module):
