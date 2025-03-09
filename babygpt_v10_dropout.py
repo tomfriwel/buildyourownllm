@@ -18,6 +18,7 @@ learning_rate = 1e-2 # 学习率
 n_embed = 32 # 嵌入层的维度
 n_head = 4 # 多头注意力的头数
 n_layer = 3 # block的数量
+dropout = 0.2 # dropout的比例
 tain_data_ratio = 0.9 # 训练数据占数据集的比例，剩下的是验证数据
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu'
@@ -59,6 +60,7 @@ class FeedFoward(nn.Module):
             nn.Linear(n_embed, n_embed * 4),
             nn.ReLU(), # 把负值变为0，正直不变的激活函数
             nn.Linear(n_embed * 4, n_embed),
+            nn.Dropout(dropout),
         )
     def forward(self, x):
         return self.net(x)
@@ -68,10 +70,13 @@ class MultiHeadAttention(nn.Module):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
         self.proj = nn.Linear(n_embed, n_embed) # 投影层，把多头注意力的输出映射回n_embed维度
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         out = torch.cat([h(x) for h in self.heads], dim=-1)
-        return self.proj(out)
+        out = self.proj(out)
+        out = self.dropout(out)
+        return out
 
 class Head(nn.Module):
     def __init__(self, head_size):
@@ -81,6 +86,7 @@ class Head(nn.Module):
         self.value = nn.Linear(n_embed, head_size, bias=False)
         # __init__里的module都会被pytorch自动当作layer来处理，用register_buffer后，这里就是一个普通的变量
         self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         B, T, C = x.shape # (batch_size, block_size, n_embed)
@@ -90,6 +96,7 @@ class Head(nn.Module):
         wei = q @ k.transpose(-2, -1) / (k.size(-1) ** 0.5) # (B, T, head_size) @ (B, head_size, T) = (B, T, T)，最后缩放避免softmax过于稀疏
         wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) # 上三角都是-inf，下三角是q和k的点积
         wei = F.softmax(wei, dim=-1) # (B, T, T)
+        wei = self.dropout(wei)
         out = wei @ v # (B, T, T) @ (B, T, head_size) = (B, T, head_size)
         return out
     
