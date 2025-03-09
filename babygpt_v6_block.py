@@ -17,6 +17,7 @@ block_size = 8 # 每个序列的最大长度
 learning_rate = 1e-2 # 学习率
 n_embed = 32 # 嵌入层的维度
 n_head = 4 # 多头注意力的头数
+n_layer = 3 # block的数量
 tain_data_ratio = 0.9 # 训练数据占数据集的比例，剩下的是验证数据
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu'
@@ -36,6 +37,18 @@ class Tokenizer:
     
     def decode(self, l: List[int]) -> str:
         return ''.join([self.itos[i] for i in l])
+
+class Block(nn.Module):
+    def __init__(self, n_embed, n_head):
+        super().__init__()
+        head_size = n_embed // n_head
+        self.sa = MultiHeadAttention(n_head, head_size)
+        self.ffwd = FeedFoward(n_embed)
+
+    def forward(self, x):
+        x = self.sa(x)
+        x = self.ffwd(x)
+        return x
 
 class FeedFoward(nn.Module):
     def __init__(self, n_embed):
@@ -82,9 +95,8 @@ class BabyGPT(nn.Module):
         self.block_size = block_size
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd) # 嵌入层，把token映射到n_embd维空间
         self.postion_embedding_table = nn.Embedding(block_size, n_embed) # 建设一个“位置”映射关系
-        self.sa_heads = MultiHeadAttention(n_head, n_embed//n_head) # 从单头变多heads的注意力，但每个heads size变小了
+        self.blocks = nn.Sequential(*[Block(n_embed, n_head=n_head) for _ in range(n_layer)])
         self.lm_head = nn.Linear(n_embd, vocab_size) # 线性层，把n_embd维空间映射到vocab_size维空间，
-        self.ffwd = FeedFoward(n_embed)
 
     def forward(self, idx, targets=None):
         B, T = idx.shape # B是batch size，T是block size
@@ -93,8 +105,7 @@ class BabyGPT(nn.Module):
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)
         pos_emb = self.postion_embedding_table(torch.arange(T, device=idx.device)) # 获得位置的嵌入表示 (T,n_embd)
         x = tok_emb + pos_emb # 给token的嵌入表示加上位置的嵌入表示，x有了“位置”信息！
-        x = self.sa_heads(x) # self-attention
-        x = self.ffwd(x)
+        x = self.blocks(x)
         logits = self.lm_head(x) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)
 
         if targets is None: # 推理场景，不需要计算损失值
