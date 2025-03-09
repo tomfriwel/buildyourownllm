@@ -38,14 +38,21 @@ class Tokenizer:
     
 class BabyGPT(nn.Module):
 
-    def __init__(self, vocab_size: int, n_embd: int):
+    def __init__(self, vocab_size: int, block_size: int, n_embd: int):
         super().__init__()
+        self.block_size = block_size
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd) # 嵌入层，把token映射到n_embd维空间
+        self.postion_embedding_table = nn.Embedding(block_size, n_embed) # 建设一个“位置”映射关系
         self.lm_head = nn.Linear(n_embd, vocab_size) # 线性层，把n_embd维空间映射到vocab_size维空间，
 
     def forward(self, idx, targets=None):
+        B, T = idx.shape # B是batch size，T是block size
+        T = min(T, self.block_size)
+        idx = idx[:, -T:] # 不管输入的序列有多长，我们只取最后的block_size个token
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)
-        logits = self.lm_head(tok_emb) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)
+        pos_emb = self.postion_embedding_table(torch.arange(T, device=idx.device)) # 获得位置的嵌入表示 (T,n_embd)
+        x = tok_emb + pos_emb # 给token的嵌入表示加上位置的嵌入表示，x有了“位置”信息！
+        logits = self.lm_head(x) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)
 
         if targets is None: # 推理场景，不需要计算损失值
             loss = None
@@ -96,7 +103,7 @@ def estimate_loss(model, data, batch_size, block_size, eval_iters):
     model.train() # 切换回训练模式
     return out
 
-model = BabyGPT(vocab_size, n_embed).to(device)
+model = BabyGPT(vocab_size, block_size, n_embed).to(device)
 
 # 训练
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
