@@ -8,7 +8,6 @@ torch.manual_seed(42)
 
 prompts = ["春江", "往事"] # 推理的输入prompts
 max_new_token = 100 # 推理生成的最大tokens数量
-
 max_iters = 5000 # 训练的最大迭代次数
 eval_iters = 100 # 评估的迭代次数
 eval_interval = 200 # 评估的间隔
@@ -20,7 +19,6 @@ n_head = 6 # 多头注意力的头数
 n_layer = 6 # block的数量
 dropout = 0.2 # dropout的比例
 tain_data_ratio = 0.9 # 训练数据占数据集的比例，剩下的是验证数据
-
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu'
 
 with open('ci.txt', 'r', encoding='utf-8') as f:
@@ -173,7 +171,6 @@ def estimate_loss(model, data, batch_size, block_size, eval_iters):
 
 model = BabyGPT(vocab_size, block_size, n_embed).to(device)
 
-# 训练
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
 start_time = time.time()
@@ -194,13 +191,10 @@ for iter in range(max_iters):
         losses = estimate_loss(model, data, batch_size, block_size, eval_iters)
         print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, speed: {tokens_per_sec:.2f} tokens/sec")
 
-# 推理
 prompt_tokens = torch.stack([torch.tensor(tokenizer.encode(p)).to(device) for p in prompts])
 
-# 生成
 result = model.generate(prompt_tokens, max_new_token)
 
-# 解码并打印结果
 for tokens in result:
     print(tokenizer.decode(tokens.tolist()))
     print('-'*10)
