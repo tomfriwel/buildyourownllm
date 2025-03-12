@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from typing import List
+import time
 
 torch.manual_seed(42)
 
@@ -146,6 +147,13 @@ model.eval()
 while True:
     prompt = input("请输入文字: ")
     prompt_tokens = torch.tensor(tokenizer.encode(prompt)).unsqueeze(0).to(device)
+    start_time = time.time()
     result = model.generate(prompt_tokens, max_new_token)
+    end_time = time.time()
+
+    elapsed_time = end_time - start_time
+    tokens_per_second = max_new_token / elapsed_time
+
     print(tokenizer.decode(result[0].tolist()))
+    print(f"> 生成速度: {tokens_per_second:.2f} tokens/s")
     print('-'*10)
