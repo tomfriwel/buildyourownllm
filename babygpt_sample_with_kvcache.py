@@ -45,10 +45,12 @@ class Block(nn.Module):
         self.ln1 = nn.LayerNorm(n_embed) # layer norm layer
         self.ln2 = nn.LayerNorm(n_embed)
 
-    def forward(self, x):
-        x = x + self.sa(self.ln1(x)) # 使用了残差连接，保留原来的x信息，避免梯度消失
+    def forward(self, x, kv_cache=None):
+        # 使用了残差连接，保留原来的x信息，避免梯度消失
+        sa_out, new_kv_cache = self.sa(self.ln1(x), kv_cache)
+        x = x + sa_out
         x = x + self.ffwd(self.ln2(x))
-        return x
+        return x, new_kv_cache
 
 class FeedFoward(nn.Module):
     def __init__(self, n_embed):
@@ -69,11 +71,25 @@ class MultiHeadAttention(nn.Module):
         self.proj = nn.Linear(n_embed, n_embed) # 投影层，把多头注意力的输出映射回n_embed维度
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x):
-        out = torch.cat([h(x) for h in self.heads], dim=-1)
+    def forward(self, x, kv_cache=None):
+        outputs = []
+        new_kv_caches = []
+        
+        # 处理每个注意力头
+        for i, head in enumerate(self.heads):
+            # 获取当前头的kv缓存
+            head_kv_cache = None if kv_cache is None else kv_cache[i]
+            # 计算当前头的输出和新的kv缓存
+            out, new_head_kv_cache = head(x, head_kv_cache)
+            outputs.append(out)
+            new_kv_caches.append(new_head_kv_cache)
+        
+        # 连接所有头的输出
+        out = torch.cat(outputs, dim=-1)
         out = self.proj(out)
         out = self.dropout(out)
-        return out
+        
+        return out, new_kv_caches
 
 class Head(nn.Module):
     def __init__(self, head_size):
@@ -85,17 +101,45 @@ class Head(nn.Module):
         self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x):
+    def forward(self, x, kv_cache=None):
         B, T, C = x.shape # (batch_size, block_size, n_embed)
+        
+        # 计算当前输入的k和v
         k = self.key(x)   # (B, T, head_size)
         q = self.query(x) # (B, T, head_size)
         v = self.value(x) # (B, T, head_size)
-        wei = q @ k.transpose(-2, -1) / (k.size(-1) ** 0.5) # (B, T, head_size) @ (B, head_size, T) = (B, T, T)，最后缩放避免softmax过于稀疏
-        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) # 上三角都是-inf，下三角是q和k的点积
-        wei = F.softmax(wei, dim=-1) # (B, T, T)
+        
+        # 如果有kv缓存，将当前的k和v与缓存连接起来
+        if kv_cache is not None:
+            k_cache, v_cache = kv_cache
+            k = torch.cat([k_cache, k], dim=1)  # 连接时间维度
+            v = torch.cat([v_cache, v], dim=1)  # 连接时间维度
+        
+        # 存储当前的k和v作为新的缓存
+        new_kv_cache = (k, v)
+        
+        # 计算attention
+        # q: (B, T, head_size), k: (B, T', head_size) -> (B, T, T')
+        wei = q @ k.transpose(-2, -1) / (k.size(-1) ** 0.5)
+        
+        # 获取注意力掩码的尺寸
+        T_total = k.size(1)  # 总的序列长度(包括缓存)
+        T_current = q.size(1) # 当前输入的序列长度
+        
+        # 创建掩码，确保当前token只关注过去的token
+        # 注意掩码大小需要匹配 wei 的最后两个维度 (T_current, T_total)
+        mask = torch.tril(torch.ones(T_total, T_total, device=x.device))
+        mask = mask[-T_current:, :]  # 只取最后T_current行
+        
+        # 应用掩码
+        wei = wei.masked_fill(mask == 0, float('-inf'))
+        wei = F.softmax(wei, dim=-1) # (B, T_current, T_total)
         wei = self.dropout(wei)
-        out = wei @ v # (B, T, T) @ (B, T, head_size) = (B, T, head_size)
-        return out
+        
+        # 计算输出
+        out = wei @ v # (B, T_current, T_total) @ (B, T_total, head_size) = (B, T_current, head_size)
+        
+        return out, new_kv_cache
     
 class BabyGPT(nn.Module):
 
@@ -103,19 +147,37 @@ class BabyGPT(nn.Module):
         super().__init__()
         self.block_size = block_size
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd) # 嵌入层，把token映射到n_embd维空间
-        self.postion_embedding_table = nn.Embedding(block_size, n_embed) # 建设一个“位置”映射关系
-        self.blocks = nn.Sequential(*[Block(n_embed, n_head=n_head) for _ in range(n_layer)])
+        self.postion_embedding_table = nn.Embedding(block_size, n_embed) # 建设一个"位置"映射关系
+        # 改用ModuleList以便单独处理每个block的kv_cache
+        self.blocks = nn.ModuleList([Block(n_embed, n_head=n_head) for _ in range(n_layer)])
         self.ln_final = nn.LayerNorm(n_embed)
         self.lm_head = nn.Linear(n_embd, vocab_size) # 线性层，把n_embd维空间映射到vocab_size维空间，
 
-    def forward(self, idx, targets=None):
+    def forward(self, idx, targets=None, kv_cache=None):
         B, T = idx.shape # B是batch size，T是block size
-        T = min(T, self.block_size)
-        idx = idx[:, -T:] # 不管输入的序列有多长，我们只取最后的block_size个token
+        
+        # 处理kv_cache，确定位置偏移量
+        if kv_cache is not None:
+            # 如果有缓存，我们只需要处理最新的token
+            pos_offset = kv_cache[0][0][0][0].size(1) if kv_cache else 0
+            idx = idx[:, -1:]  # 只处理最后一个token
+            T = 1
+        else:
+            pos_offset = 0
+            T = min(T, self.block_size)
+            idx = idx[:, -T:] # 不管输入的序列有多长，我们只取最后的block_size个token
+            
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)
-        pos_emb = self.postion_embedding_table(torch.arange(T, device=idx.device)) # 获得位置的嵌入表示 (T,n_embd)
-        x = tok_emb + pos_emb # 给token的嵌入表示加上位置的嵌入表示，x有了“位置”信息！
-        x = self.blocks(x)
+        pos_emb = self.postion_embedding_table(torch.arange(pos_offset, pos_offset + T, device=idx.device)) # 获得位置的嵌入表示 (T,n_embd)
+        x = tok_emb + pos_emb # 给token的嵌入表示加上位置的嵌入表示，x有了"位置"信息！
+        
+        # 处理每个block，并且维护kv_cache
+        new_kv_cache = []
+        for i, block in enumerate(self.blocks):
+            block_kv_cache = None if kv_cache is None else kv_cache[i]
+            x, block_new_kv_cache = block(x, block_kv_cache)
+            new_kv_cache.append(block_new_kv_cache)
+            
         x = self.ln_final(x)
         logits = self.lm_head(x) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)
 
@@ -123,18 +185,25 @@ class BabyGPT(nn.Module):
             loss = None
         else:
             B, T, C = logits.shape
-            logits = logits.view(B*T, C) # 把(B,T,C)的形状转换为(B*T,C)，因为交叉熵损失函数第一个参数只接受二维输入。这个操作并没有丢失信息
-            targets = targets.view(B*T) # 把(B,T)的形状转换为(B*T)，因为交叉熵损失函数第二个参数只接受一维输入。这个操作并没有丢失信息
+            logits = logits.view(B*T, C) # 把(B,T,C)的形状转换为(B*T,C)
+            targets = targets.view(B*T) # 把(B,T)的形状转换为(B*T)
             loss = F.cross_entropy(logits, targets) # 计算交叉熵损失
-        return logits, loss
+        return logits, loss, new_kv_cache
 
     def generate(self, idx, max_new_tokens):
+        # 初始化kv_cache为None
+        kv_cache = None
+        
         for _ in range(max_new_tokens):
-            logits, _ = self(idx) # logits的形状是(B,T,vocab_size)，每一个token都计算了下一个token的概率
-            logits = logits[:, -1, :] # 实际上我们只需要最后一个token算出来的值
-            probs = F.softmax(logits, dim=-1) # 使用softmax函数算概率分布，这里dim=-1表示对最后一个维度进行softmax
-            idx_next = torch.multinomial(probs, num_samples=1) # 根据概率分布随机采样，这里num_samples=1表示采样一个token
-            idx = torch.cat((idx, idx_next), dim=1) # 把采样的token拼接到序列后面
+            # 将kv_cache传入forward
+            logits, _, kv_cache = self(idx, kv_cache=kv_cache)
+            
+            # 只需要关注最后一个token的预测
+            logits = logits[:, -1, :] # (B, vocab_size)
+            probs = F.softmax(logits, dim=-1)
+            idx_next = torch.multinomial(probs, num_samples=1) # (B, 1)
+            idx = torch.cat((idx, idx_next), dim=1)
+        
         return idx
     
 tokenizer = Tokenizer(text)
