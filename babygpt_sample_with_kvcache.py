@@ -104,14 +104,18 @@ class Head(nn.Module):
     def forward(self, x, kv_cache=None):
         B, T, C = x.shape # (batch_size, block_size, n_embed)
         
+        current_token = x[:, -1, :] # 取当前的token
+        q = self.query(current_token) # (B, 1, head_size)
+
         # 计算当前输入的k和v
-        k = self.key(x)   # (B, T, head_size)
-        q = self.query(x) # (B, T, head_size)
-        v = self.value(x) # (B, T, head_size)
-        
-        # 如果有kv缓存，将当前的k和v与缓存连接起来
-        if kv_cache is not None:
+
+        if kv_cache None:
+            k = self.key(x)   # (B, T, head_size)
+            v = self.value(x) # (B, T, head_size)
+        else:
             k_cache, v_cache = kv_cache
+            k = self.key(current_token)
+            v = self.value(current_token)
             k = torch.cat([k_cache, k], dim=1)  # 连接时间维度
             v = torch.cat([v_cache, v], dim=1)  # 连接时间维度
         
