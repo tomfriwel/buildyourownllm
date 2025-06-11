@@ -17,8 +17,8 @@ chars = sorted(list(set(text)))  # 获取文本中所有独特的字符，并排
 vocab_size = len(chars)  # 词汇表大小
 char_to_index = { ch:i for i,ch in enumerate(chars) }  # 字符到索引的映射
 index_to_char = { i:ch for i,ch in enumerate(chars) }  # 索引到字符的映射
-encode = lambda s: [char_to_index[c] for c in s]  # 将字符串编码为索引列表
-decode = lambda l: ''.join([index_to_char[i] for i in l])  # 将索引列表解码为字符串
+encode = lambda s: [char_to_index[c] for c in s]  # 将字符串编码为索引列表，例如 '春江' -> [0, 1]
+decode = lambda l: ''.join([index_to_char[i] for i in l])  # 将索引列表解码为字符串，例如 [0, 1] -> '春江'
 
 # 初始化转移矩阵，用于记录每个字符后出现的字符的次数
 #      a    b    c  ... (vocab_size)
@@ -29,6 +29,11 @@ decode = lambda l: ''.join([index_to_char[i] for i in l])  # 将索引列表解�
 # (vocab_size)
 # vocab_size * vocab_size的二维数组，记录每个词的下一个词的出现次数
 transition = [[0 for _ in range(vocab_size)] for _ in range(vocab_size)]
+# 如果vocab_size = 3，transition：transition = [
+#     [0, 0, 0],  # 第一行
+#     [0, 0, 0],  # 第二行
+#     [0, 0, 0]   # 第三行
+# ]
 
 # 统计转移矩阵中的字符出现次数
 for i in range(len(text) - 1):
@@ -51,6 +56,7 @@ for i in range(max_new_token - 1):
     # 计算概率，随机采样，得到下一个词
     next_token_id = random.choices(range(vocab_size), weights=logits, k=1)[0]  # 根据概率随机选择下一个词
     generated_token.append(next_token_id)  # 将选择的词添加到生成结果中
+    break
 
 # 输出生成的文本
 print(decode(generated_token))  # 将索引列表解码为字符串并打印
