@@ -12,6 +12,17 @@ max_new_token = 100  # 最大生成的词数
 with open('ci.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
+print(len(text))  # 打印文本长度，便于调试
+# 过滤空格
+text = text.replace(' ', '')  # 去除文本中的空格
+text = text.replace('\n', '')  # 去除文本中的换行符
+text = text.replace('\r', '')  # 去除文本中的回车符
+text = text.replace('\t', '')  # 去除文本中的制表符
+text = text.replace('　', '')  # 去除文本中的全角空格
+text = text.replace(' ', '')  # 再次去除文本中的空格
+print(len(text))  # 打印过滤后的文本长度，便于调试
+print(text[:100])  # 打印前100个字符，便于调试
+
 # 构建词汇表
 chars = sorted(list(set(text)))  # 获取文本中所有独特的字符，并排序
 vocab_size = len(chars)  # 词汇表大小
