@@ -15,10 +15,10 @@ with open('ci.txt', 'r', encoding='utf-8') as f:
 # 构建词汇表
 chars = sorted(list(set(text)))  # 获取文本中所有独特的字符，并排序
 vocab_size = len(chars)  # 词汇表大小
-stoi = { ch:i for i,ch in enumerate(chars) }  # 字符到索引的映射
-itos = { i:ch for i,ch in enumerate(chars) }  # 索引到字符的映射
-encode = lambda s: [stoi[c] for c in s]  # 将字符串编码为索引列表
-decode = lambda l: ''.join([itos[i] for i in l])  # 将索引列表解码为字符串
+char_to_index = { ch:i for i,ch in enumerate(chars) }  # 字符到索引的映射
+index_to_char = { i:ch for i,ch in enumerate(chars) }  # 索引到字符的映射
+encode = lambda s: [char_to_index[c] for c in s]  # 将字符串编码为索引列表
+decode = lambda l: ''.join([index_to_char[i] for i in l])  # 将索引列表解码为字符串
 
 # 初始化转移矩阵，用于记录每个字符后出现的字符的次数
 #      a    b    c  ... (vocab_size)
