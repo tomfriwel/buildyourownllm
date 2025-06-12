@@ -1,8 +1,10 @@
 # 导入随机数生成模块
 import random
 
+# 明白为什么要取随机了，因为最大那个词的话，后面的词都是一样的
+
 # 设置随机数种子，保证每次运行结果一致（可以去掉此行获得随机结果）
-random.seed(42)
+# random.seed(42)
 
 # 定义生成文本的起始词和最大生成长度
 prompt = "春江"  # 起始词
@@ -20,8 +22,9 @@ text = text.replace('\r', '')  # 去除文本中的回车符
 text = text.replace('\t', '')  # 去除文本中的制表符
 text = text.replace('　', '')  # 去除文本中的全角空格
 text = text.replace(' ', '')  # 再次去除文本中的空格
+text = text.replace('，', '')  # 去除文本中的中文逗号
+text = text.replace('。', '')  # 去除文本中的中文句号
 print(len(text))  # 打印过滤后的文本长度，便于调试
-print(text[:100])  # 打印前100个字符，便于调试
 
 # 构建词汇表
 chars = sorted(list(set(text)))  # 获取文本中所有独特的字符，并排序
@@ -66,8 +69,8 @@ for i in range(max_new_token - 1):
     logits = [logit / total for logit in logits]  # 归一化转移概率
     # 计算概率，随机采样，得到下一个词
     next_token_id = random.choices(range(vocab_size), weights=logits, k=1)[0]  # 根据概率随机选择下一个词
+
     generated_token.append(next_token_id)  # 将选择的词添加到生成结果中
-    break
 
 # 输出生成的文本
 print(decode(generated_token))  # 将索引列表解码为字符串并打印
