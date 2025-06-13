@@ -6,7 +6,7 @@ from typing import List
 random.seed(42) # 去掉此行，获得随机结果
 
 # 定义一些初始的文本提示
-prompts = ["春江", "往事"]
+prompts = ["春江", "往事", "案头"]
 # 定义生成的最大新token数量
 max_new_token = 100
 # 定义最大迭代次数
