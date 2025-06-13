@@ -1,39 +1,57 @@
+# 导入随机模块和类型提示模块
 import random
 from typing import List
 
+# 设置随机种子，确保每次运行结果一致
 random.seed(42) # 去掉此行，获得随机结果
 
+# 定义一些初始的文本提示
 prompts = ["春江", "往事"]
+# 定义生成的最大新token数量
 max_new_token = 100
+# 定义最大迭代次数
 max_iters = 8000
+# 定义每次训练的批次大小
 batch_size = 32
+# 定义每个序列的最大长度
 block_size = 8
 
+# 读取训练数据文件内容
 with open('ci.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
+# 定义一个分词器类，用于将文本转化为数字表示，或将数字表示转化为文本
 class Tokenizer:
     def __init__(self, text: str):
+        # 获取文本中所有的唯一字符，并排序
         self.chars = sorted(list(set(text)))
+        # 计算词汇表大小
         self.vocab_size = len(self.chars)
+        # 创建字符到索引的映射
         self.stoi = {ch: i for i, ch in enumerate(self.chars)}
+        # 创建索引到字符的映射
         self.itos = {i: ch for i, ch in enumerate(self.chars)}
     
     def encode(self, s: str) -> List[int]:
+        # 将字符串转化为索引列表
         return [self.stoi[c] for c in s]
     
     def decode(self, l: List[int]) -> str:
+        # 将索引列表转化为字符串
         return ''.join([self.itos[i] for i in l])
 
+# 定义一个简单的双字模型类
 class BigramLanguageModel():
     def __init__(self, vocab_size: int):
+        # 初始化词汇表大小
         self.vocab_size = vocab_size
 
+        # 初始化转移概率矩阵，用于存储每个字符到下一个字符的概率
         self.transition = [[0 for _ in range(vocab_size)] 
                           for _ in range(vocab_size)]
         
     def __call__(self, x):
-        # 方便直接调用model(x)
+        # 方便直接调用model(x)，等价于调用forward方法
         return self.forward(x)
     
     def forward(self, idx: List[List[int]]) -> List[List[List[float]]]:
@@ -54,6 +72,7 @@ class BigramLanguageModel():
         B = len(idx)  # 批次大小
         T = len(idx[0])  # 每一批的序列长度
         
+        # 初始化logits，用于存储概率分布
         logits = [
             [[0.0 for _ in range(self.vocab_size)] 
              for _ in range(T)]
@@ -69,6 +88,7 @@ class BigramLanguageModel():
         return logits
 
     def generate(self, idx: List[List[int]], max_new_tokens: int) -> List[int]:
+        # 根据输入序列生成新的token，直到达到最大数量
         for _ in range(max_new_tokens):
             logits_batch = self(idx)
             for batch_idx, logits in enumerate(logits_batch):
@@ -76,14 +96,15 @@ class BigramLanguageModel():
                 # 但实际上我们只需要最后一个token的“下一个token的概率”
                 logits = logits[-1]
                 total = max(sum(logits),1)
-                # 归一化
+                # 归一化概率分布
                 logits = [logit / total for logit in logits]
-                # 根据概率随机采样
+                # 根据概率随机采样下一个token
                 next_token = random.choices(
                     range(self.vocab_size),
                     weights=logits,
                     k=1
                 )[0]
+                # 将采样的token添加到序列中
                 idx[batch_idx].append(next_token)
         return idx
     
@@ -105,28 +126,35 @@ def get_batch(tokens, batch_size, block_size):
         y.append(tokens[i+1:i+block_size+1])
     return x, y
 
+# 初始化分词器
 tokenizer = Tokenizer(text)
+# 获取词汇表大小
 vocab_size = tokenizer.vocab_size
 
+# 将文本转化为token序列
 tokens = tokenizer.encode(text)
 
+# 初始化语言模型
 model = BigramLanguageModel(vocab_size)
 
-# 训练
+# 训练模型
 for iter in range(max_iters):
+    # 获取训练数据批次
     x_batch, y_batch = get_batch(tokens, batch_size, block_size)
     for i in range(len(x_batch)):
         for j in range(len(x_batch[i])):
             x = x_batch[i][j]
             y = y_batch[i][j]
+            # 更新转移概率矩阵
             model.transition[x][y] += 1
 
+# 将提示文本转化为token序列
 prompt_tokens = [tokenizer.encode(prompt) for prompt in prompts]
 
-# 推理
+# 使用模型生成新文本
 result = model.generate(prompt_tokens, max_new_token)
 
-# decode
+# 解码生成的token序列并打印结果
 for tokens in result:
     print(tokenizer.decode(tokens))
     print('-'*10)
