@@ -126,16 +126,16 @@ def get_batch(tokens, batch_size, block_size):
     # batch_start_idx里都是0到len(tokens) - block_size之间的随机整数
     batch_start_idx = random.choices(range(len(tokens) - block_size), k=batch_size)
     # len(batch_start_idx) = batch_size = 32
-    x, y = [], []
+    input_tokens, target_tokens = [], []
 
     # batch_size times
-    # x = [[], [], ...]  # 每个子列表长度为block_size
-    # len(x) = batch_size = 32
-    # len(x[0]) = block_size = 8
-    for token_i in batch_start_idx:
-        x.append(tokens[token_i:token_i+block_size])
-        y.append(tokens[token_i+1:token_i+block_size+1])
-    return x, y
+    # input_tokens = [[], [], ...]  # 每个子列表长度为block_size
+    # len(input_tokens) = batch_size = 32
+    # len(input_tokens[0]) = block_size = 8
+    for i in batch_start_idx:
+        input_tokens.append(tokens[i:i+block_size])
+        target_tokens.append(tokens[i+1:i+block_size+1])
+    return input_tokens, target_tokens
 
 # 初始化分词器
 tokenizer = Tokenizer(text)
