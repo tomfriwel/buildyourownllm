@@ -203,3 +203,9 @@ result = model.generate(prompt_tokens, max_new_token)
 for tokens in result:
     print(tokenizer.decode(tokens))
     print('-'*10)
+
+'''
+大致流程：
+- 计算每个token的下一个token的概率分布: get_batch(from tokens_of_text), transition
+- 根据概率分布随机采样下一个token: generate, forward(based on transition)
+'''
