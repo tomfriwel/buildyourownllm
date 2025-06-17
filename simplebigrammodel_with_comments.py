@@ -53,6 +53,14 @@ class BigramLanguageModel():
         self.vocab_size = vocab_size
 
         # 初始化转移概率矩阵，用于存储每个字符到下一个字符的概率
+        # eg: [[0, 0, 0, ...],
+        #      [0, 0, 0, ...],
+        #      [0, 0, 0, ...],
+        #      ...]
+        # len(transition) = vocab_size
+        # len(transition[0]) = vocab_size
+        # transition[i][j]表示字符i到字符j的转移概率
+        # 初始化为0，表示还没有训练
         self.transition = [[0 for _ in range(vocab_size)] 
                           for _ in range(vocab_size)]
         
@@ -65,7 +73,7 @@ class BigramLanguageModel():
     # 3. 每个token的下一个token的概率分布是一个一维数组，长度为词汇表大小
     def forward(self, list_of_tokens: List[List[int]]) -> List[List[List[float]]]:
         '''
-        输入idx，是一个二维数组，如[[1, 2, 3],
+        输入list_of_tokens，是一个二维数组，如[[1, 2, 3],
                                   [4, 5, 6]]
         表示同时希望推理的多个序列
 
@@ -82,6 +90,8 @@ class BigramLanguageModel():
         T = len(list_of_tokens[0])  # 每一批的序列长度
         
         # 初始化logits，用于存储概率分布
+        # logits是一个三维数组，形状为(B, T, vocab_size)
+        # 由内向外len=vocab_size；len=T；len=B
         logits = [
             [[0.0 for _ in range(self.vocab_size)] 
              for _ in range(T)]
@@ -101,6 +111,7 @@ class BigramLanguageModel():
     def generate(self, list_of_tokens: List[List[int]], max_new_tokens: int) -> List[int]:
         # 根据输入序列生成新的token，直到达到最大数量
         for _ in range(max_new_tokens):
+            # 前向传播，计算每个token的下一个token的概率分布, eg: [[0.1, 0.2, 0.3, .. (vocab_size)],
             logits_batch = self(list_of_tokens)
             for batch_idx, logits in enumerate(logits_batch):
                 # 我们计算了每一个token的下一个token的概率
