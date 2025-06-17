@@ -149,18 +149,18 @@ tokens_of_text = tokenizer.encode(text)
 model = BigramLanguageModel(vocab_size)
 
 # 训练模型
-for iter in range(max_iters):
+for iteration in range(max_iters):
     # 获取训练数据批次
-    x_batch, y_batch = get_batch(tokens_of_text, batch_size, block_size)
+    input_batch, target_batch = get_batch(tokens_of_text, batch_size, block_size)
 
-    # len(x_batch) = batch_size = 32
-    for i in range(len(x_batch)):
-        # len(x_batch[i]) = block_size = 8
-        for j in range(len(x_batch[i])):
-            x = x_batch[i][j]
-            y = y_batch[i][j]
+    # len(input_batch) = batch_size = 32
+    for batch_index in range(len(input_batch)):
+        # len(input_batch[batch_index]) = block_size = 8
+        for token_index in range(len(input_batch[batch_index])):
+            input_token = input_batch[batch_index][token_index]
+            target_token = target_batch[batch_index][token_index]
             # 更新转移概率矩阵
-            model.transition[x][y] += 1
+            model.transition[input_token][target_token] += 1
 
 # 将提示文本转化为token序列
 prompt_tokens = [tokenizer.encode(prompt) for prompt in prompts]
