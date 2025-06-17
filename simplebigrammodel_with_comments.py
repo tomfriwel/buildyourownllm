@@ -161,6 +161,9 @@ for iteration in range(max_iters):
             target_token = target_batch[batch_index][token_index]
             # 更新转移概率矩阵
             model.transition[input_token][target_token] += 1
+    # 每1000次迭代打印一次训练进度
+    if iteration % 1000 == 0:
+        print(f"Iteration {iteration}/{max_iters} completed.")
 
 # 将提示文本转化为token序列
 prompt_tokens = [tokenizer.encode(prompt) for prompt in prompts]
