@@ -21,6 +21,9 @@ with open('ci.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
 # 定义一个分词器类，用于将文本转化为数字表示，或将数字表示转化为文本
+# 作用：# 1. 获取文本中所有的唯一字符，并创建字符到索引的映射
+# 2. 将字符串转化为索引列表
+# 3. 将索引列表转化为字符串
 class Tokenizer:
     def __init__(self, text: str):
         # 获取文本中所有的唯一字符，并排序
@@ -41,6 +44,9 @@ class Tokenizer:
         return ''.join([self.itos[i] for i in l])
 
 # 定义一个简单的双字模型类
+# 作用：# 1. 初始化转移概率矩阵
+# 2. 前向传播方法，计算每个token的下一个token的概率分布
+# 3. 生成新token的方法，根据输入序列生成新的token
 class BigramLanguageModel():
     def __init__(self, vocab_size: int):
         # 初始化词汇表大小
@@ -54,6 +60,9 @@ class BigramLanguageModel():
         # 方便直接调用model(x)，等价于调用forward方法
         return self.forward(x)
     
+    # 作用：# 1. 输入idx，是一个二维数组，表示多个序列
+    # 2. 输出是一个三维数组，每个序列的每个token的下一个token的概率分布
+    # 3. 每个token的下一个token的概率分布是一个一维数组，长度为词汇表大小
     def forward(self, idx: List[List[int]]) -> List[List[List[float]]]:
         '''
         输入idx，是一个二维数组，如[[1, 2, 3],
@@ -87,6 +96,8 @@ class BigramLanguageModel():
                 
         return logits
 
+    # 作用：# 1. 根据输入序列生成新的token，直到达到最大数量
+    # 2. 每次生成一个token，并将其添加到序列中
     def generate(self, idx: List[List[int]], max_new_tokens: int) -> List[int]:
         # 根据输入序列生成新的token，直到达到最大数量
         for _ in range(max_new_tokens):
@@ -107,7 +118,10 @@ class BigramLanguageModel():
                 # 将采样的token添加到序列中
                 idx[batch_idx].append(next_token)
         return idx
-    
+
+# 作用：# 1. 随机获取一批数据x和y用于训练
+# 2. x和y都是二维数组，可以用于并行训练
+# 3. 其中y数组内的每一个值，都是x数组内对应位置的值的下一个值
 def get_batch(tokens, batch_size, block_size):
     '''
     随机获取一批数据x和y用于训练
@@ -149,6 +163,8 @@ tokens_of_text = tokenizer.encode(text)
 model = BigramLanguageModel(vocab_size)
 
 # 训练模型
+# 作用：# 1. 随机获取一批数据x和y用于训练
+# 2. 更新转移概率矩阵
 for iteration in range(max_iters):
     # 获取训练数据批次
     input_batch, target_batch = get_batch(tokens_of_text, batch_size, block_size)
