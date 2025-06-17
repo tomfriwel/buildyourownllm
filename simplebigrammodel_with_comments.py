@@ -63,7 +63,7 @@ class BigramLanguageModel():
     # 作用：# 1. 输入idx，是一个二维数组，表示多个序列
     # 2. 输出是一个三维数组，每个序列的每个token的下一个token的概率分布
     # 3. 每个token的下一个token的概率分布是一个一维数组，长度为词汇表大小
-    def forward(self, idx: List[List[int]]) -> List[List[List[float]]]:
+    def forward(self, list_of_tokens: List[List[int]]) -> List[List[List[float]]]:
         '''
         输入idx，是一个二维数组，如[[1, 2, 3],
                                   [4, 5, 6]]
@@ -78,8 +78,8 @@ class BigramLanguageModel():
                                 [0.8, 0.9, 1.0, .. (vocab_size)]]]
         
         '''
-        B = len(idx)  # 批次大小
-        T = len(idx[0])  # 每一批的序列长度
+        B = len(list_of_tokens)  # 批次大小
+        T = len(list_of_tokens[0])  # 每一批的序列长度
         
         # 初始化logits，用于存储概率分布
         logits = [
@@ -90,7 +90,7 @@ class BigramLanguageModel():
         
         for b in range(B):
             for t in range(T):
-                current_token = idx[b][t]
+                current_token = list_of_tokens[b][t]
                 # 计算了每一个token的下一个token的概率
                 logits[b][t] = self.transition[current_token]
                 
@@ -98,10 +98,10 @@ class BigramLanguageModel():
 
     # 作用：# 1. 根据输入序列生成新的token，直到达到最大数量
     # 2. 每次生成一个token，并将其添加到序列中
-    def generate(self, idx: List[List[int]], max_new_tokens: int) -> List[int]:
+    def generate(self, list_of_tokens: List[List[int]], max_new_tokens: int) -> List[int]:
         # 根据输入序列生成新的token，直到达到最大数量
         for _ in range(max_new_tokens):
-            logits_batch = self(idx)
+            logits_batch = self(list_of_tokens)
             for batch_idx, logits in enumerate(logits_batch):
                 # 我们计算了每一个token的下一个token的概率
                 # 但实际上我们只需要最后一个token的“下一个token的概率”
@@ -116,8 +116,8 @@ class BigramLanguageModel():
                     k=1
                 )[0]
                 # 将采样的token添加到序列中
-                idx[batch_idx].append(next_token)
-        return idx
+                list_of_tokens[batch_idx].append(next_token)
+        return list_of_tokens
 
 # 作用：# 1. 随机获取一批数据x和y用于训练
 # 2. x和y都是二维数组，可以用于并行训练
