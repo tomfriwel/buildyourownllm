@@ -119,11 +119,22 @@ def get_batch(tokens, batch_size, block_size):
     y = [[2, 3, 4],
          [10, 11, 12]]
     '''
-    ix = random.choices(range(len(tokens) - block_size), k=batch_size)
+
+    # block_size = 8
+    # batch_size = 32
+    # 随机选择batch_size个起始位置
+    # batch_start_idx里都是0到len(tokens) - block_size之间的随机整数
+    batch_start_idx = random.choices(range(len(tokens) - block_size), k=batch_size)
+    # len(batch_start_idx) = batch_size = 32
     x, y = [], []
-    for i in ix:
-        x.append(tokens[i:i+block_size])
-        y.append(tokens[i+1:i+block_size+1])
+
+    # batch_size times
+    # x = [[], [], ...]  # 每个子列表长度为block_size
+    # len(x) = batch_size = 32
+    # len(x[0]) = block_size = 8
+    for token_i in batch_start_idx:
+        x.append(tokens[token_i:token_i+block_size])
+        y.append(tokens[token_i+1:token_i+block_size+1])
     return x, y
 
 # 初始化分词器
@@ -131,8 +142,8 @@ tokenizer = Tokenizer(text)
 # 获取词汇表大小
 vocab_size = tokenizer.vocab_size
 
-# 将文本转化为token序列
-tokens = tokenizer.encode(text)
+# 将文本转化为token序列，所有的字符都转化为数字表示, eg: "春江" -> [0, 1]
+tokens_of_text = tokenizer.encode(text)
 
 # 初始化语言模型
 model = BigramLanguageModel(vocab_size)
@@ -140,8 +151,11 @@ model = BigramLanguageModel(vocab_size)
 # 训练模型
 for iter in range(max_iters):
     # 获取训练数据批次
-    x_batch, y_batch = get_batch(tokens, batch_size, block_size)
+    x_batch, y_batch = get_batch(tokens_of_text, batch_size, block_size)
+
+    # len(x_batch) = batch_size = 32
     for i in range(len(x_batch)):
+        # len(x_batch[i]) = block_size = 8
         for j in range(len(x_batch[i])):
             x = x_batch[i][j]
             y = y_batch[i][j]
