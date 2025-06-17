@@ -206,6 +206,6 @@ for tokens in result:
 
 '''
 大致流程：
-- 计算每个token的下一个token的概率分布: get_batch(from tokens_of_text), transition
-- 根据概率分布随机采样下一个token: generate, forward(based on transition)
+- 训练模型：计算每个token的下一个token的概率分布: get_batch(from tokens_of_text), transition
+- 生成新文本：根据概率分布随机采样下一个token: generate, forward(based on transition)
 '''
