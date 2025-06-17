@@ -102,6 +102,7 @@ class BigramLanguageModel():
             for t in range(T):
                 current_token = list_of_tokens[b][t]
                 # 计算了每一个token的下一个token的概率
+                # len(logits[b][t]) = len(self.transition[current_token]) = vocab_size
                 logits[b][t] = self.transition[current_token]
                 
         return logits
