@@ -182,6 +182,7 @@ for iteration in range(max_iters):
         print(f"Iteration {iteration}/{max_iters} completed.")
 
 # 将提示文本转化为token序列
+# eg: ["春江", "往事", "案头"] -> [[0, 1], [2, 3], [4, 5]]
 prompt_tokens = [tokenizer.encode(prompt) for prompt in prompts]
 
 # 使用模型生成新文本
