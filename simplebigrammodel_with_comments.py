@@ -6,6 +6,7 @@ from typing import List
 random.seed(42) # 去掉此行，获得随机结果
 
 # 定义一些初始的文本提示
+# 注意：prompts里每个元素长度都必须相同，否则会报错
 prompts = ["春江", "往事"]
 # 定义生成的最大新token数量
 max_new_token = 100
@@ -141,6 +142,7 @@ class BigramLanguageModel():
                 )[0]
                 # 将采样的token添加到序列中
                 list_of_tokens[batch_idx].append(next_token)
+                print(f"len(list_of_tokens[batch_idx]) = {len(list_of_tokens[batch_idx])}")
         return list_of_tokens
 
 # 作用：# 1. 随机获取一批数据x和y用于训练
@@ -210,6 +212,7 @@ for iteration in range(max_iters):
 prompt_tokens = [tokenizer.encode(prompt) for prompt in prompts]
 
 # 使用模型生成新文本
+# 对每个批次内的每个token，算下一个token的概率分布，然后归一化后随机采样，直到生成指定数量的token，最终长度=最初的token长度+max_new_token
 result = model.generate(prompt_tokens, max_new_token)
 
 # 解码生成的token序列并打印结果
