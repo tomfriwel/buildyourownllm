@@ -97,15 +97,21 @@ class BigramLanguageModel():
              for _ in range(T)]
             for _ in range(B)
         ]
-        print(f"Batch size: {B}, Sequence length: {T}, Vocab size: {self.vocab_size}")
+        # ----original version:
         for b in range(B):
             for t in range(T):
                 current_token = list_of_tokens[b][t]
                 # 计算了每个批次中，每一个token的下一个token的概率
                 # len(logits[b][t]) = len(self.transition[current_token]) = vocab_size
                 logits[b][t] = self.transition[current_token]
-
-        print(f"Logits: {len(logits)} x {len(logits[0])} x {len(logits[0][0])}")
+        
+        # ----optimized version:
+        # 只计算最后一个token的下一个token的概率，因为后面只会用到最后一个token的概率
+        # for b in range(B):
+        #     current_token = list_of_tokens[b][-1]
+        #     # 计算了每个批次中，每一个token的下一个token的概率
+        #     # len(logits[b][-1]) = len(self.transition[current_token]) = vocab_size
+        #     logits[b][-1] = self.transition[current_token]
         return logits
 
     # 作用：# 1. 根据输入序列生成新的token，直到达到最大数量
