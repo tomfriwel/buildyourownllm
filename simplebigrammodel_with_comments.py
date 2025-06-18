@@ -121,9 +121,11 @@ class BigramLanguageModel():
         for _ in range(max_new_tokens):
             # 前向传播，计算每个token的下一个token的概率分布, eg: [[0.1, 0.2, 0.3, .. (vocab_size)],
             logits_batch = self(list_of_tokens)
+            # logits_batch = BatchSize x CurrentTokenLength x VocabSize
 
             # batch_idx的长度就是批次大小=len(list_of_tokens)，也就是提示词的批次数，在这里batch_idx从0到1，也就是2个批次
             for batch_idx, logits in enumerate(logits_batch):
+                # logits = CurrentTokenLength x VocabSize
                 print(f"Batch {batch_idx}: logits length = {len(logits)} logits[0] length = {len(logits[0])}")
                 # 我们计算了每一个token的下一个token的概率
                 # 但实际上我们只需要最后一个token的“下一个token的概率”（可以优化，只计算最后一个token的概率）
