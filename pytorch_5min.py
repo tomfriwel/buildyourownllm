@@ -37,6 +37,8 @@ x_train = x_train.to(device)
 y_train = y_train.to(device)
 
 # 5. 创建模型和优化器
+# SGD (随机梯度下降)
+# 均方误差损失（Mean Squared Error, MSE）
 model = SimpleNet().to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 criterion = nn.MSELoss()
@@ -57,6 +59,7 @@ for epoch in range(epochs):
     loss.backward() # 计算新的梯度 
     optimizer.step() # 更新参数：参数 -= 学习率 * 梯度
     
+    # 每100个epoch打印一次损失和参数
     if (epoch + 1) % 100 == 0:
         w = model.linear.weight.item()
         b = model.linear.bias.item()
