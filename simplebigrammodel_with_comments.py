@@ -6,7 +6,7 @@ from typing import List
 random.seed(42) # 去掉此行，获得随机结果
 
 # 定义一些初始的文本提示
-prompts = ["春江", "往事", "案头"]
+prompts = ["春江", "往事"]
 # 定义生成的最大新token数量
 max_new_token = 100
 # 定义最大迭代次数
@@ -97,14 +97,15 @@ class BigramLanguageModel():
              for _ in range(T)]
             for _ in range(B)
         ]
-        
+        print(f"Batch size: {B}, Sequence length: {T}, Vocab size: {self.vocab_size}")
         for b in range(B):
             for t in range(T):
                 current_token = list_of_tokens[b][t]
-                # 计算了每一个token的下一个token的概率
+                # 计算了每个批次中，每一个token的下一个token的概率
                 # len(logits[b][t]) = len(self.transition[current_token]) = vocab_size
                 logits[b][t] = self.transition[current_token]
-                
+
+        print(f"Logits: {len(logits)} x {len(logits[0])} x {len(logits[0][0])}")
         return logits
 
     # 作用：# 1. 根据输入序列生成新的token，直到达到最大数量
@@ -114,9 +115,12 @@ class BigramLanguageModel():
         for _ in range(max_new_tokens):
             # 前向传播，计算每个token的下一个token的概率分布, eg: [[0.1, 0.2, 0.3, .. (vocab_size)],
             logits_batch = self(list_of_tokens)
+
+            # batch_idx的长度就是批次大小=len(list_of_tokens)，也就是提示词的批次数，在这里batch_idx从0到1，也就是2个批次
             for batch_idx, logits in enumerate(logits_batch):
+                print(f"Batch {batch_idx}: logits length = {len(logits)} logits[0] length = {len(logits[0])}")
                 # 我们计算了每一个token的下一个token的概率
-                # 但实际上我们只需要最后一个token的“下一个token的概率”
+                # 但实际上我们只需要最后一个token的“下一个token的概率”（可以优化，只计算最后一个token的概率）
                 logits = logits[-1]
                 total = max(sum(logits),1)
                 # 归一化概率分布
