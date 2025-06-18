@@ -224,4 +224,8 @@ for tokens in result:
 大致流程：
 - 训练模型：计算每个token的下一个token的概率分布: get_batch(from tokens_of_text), transition
 - 生成新文本：根据概率分布随机采样下一个token: generate, forward(based on transition)
+
+总结：
+代码的作用：
+这段代码实现了一个简单的语言模型，叫做“双字模型”（Bigram Model）。它的主要功能是根据前一个单词或字符，预测下一个单词或字符。通过分析大量的文本数据，模型会学习到哪些单词或字符经常一起出现，从而可以用来生成类似的文本。
 '''
