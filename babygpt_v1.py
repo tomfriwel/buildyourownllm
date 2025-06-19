@@ -40,8 +40,15 @@ class BabyGPT(nn.Module):
 
     def __init__(self, vocab_size: int, n_embd: int):
         super().__init__()
-        self.token_embedding_table = nn.Embedding(vocab_size, n_embd) # 嵌入层，把token映射到n_embd维空间，就像把字母表中的字母映射到一个多维空间中的点
-        self.lm_head = nn.Linear(n_embd, vocab_size) # 线性层，把n_embd维空间映射到vocab_size维空间，就像从多维空间回到字母表
+        self.token_embedding_table = nn.Embedding(
+            num_embeddings=vocab_size,
+            embedding_dim=n_embd
+        ) # 嵌入层，把token映射到n_embd维空间，就像把字母表中的字母映射到一个多维空间中的点
+        
+        self.lm_head = nn.Linear(
+            in_features=n_embd,
+            out_features=vocab_size
+        ) # 线性层，把n_embd维空间映射到vocab_size维空间，就像从多维空间回到字母表
 
     def forward(self, idx, targets=None):
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)，就像把句子中的每个字母映射到多维空间中的点
