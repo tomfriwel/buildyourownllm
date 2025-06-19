@@ -56,7 +56,7 @@ class BabyGPT(nn.Module):
     def forward(self, idx, targets=None):
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)，就像把句子中的每个字母映射到多维空间中的点
         logits = self.lm_head(tok_emb) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)，就像预测每个字母的下一个可能的字母
-        print(logits.shape) # 输出logits的形状，调试用
+        # print(logits.shape) # 输出logits的形状，调试用 torch.Size([32, 8, 6148])
         if targets is None: # 推理场景，不需要计算损失值
             loss = None
         else:
@@ -140,3 +140,12 @@ result = model.generate(prompt_tokens, max_new_token) # 根据提示词生成新
 for tokens in result:
     print(tokenizer.decode(tokens.tolist())) # 把生成的token解码成字符串，就像把字母拼成句子
     print('-'*10)
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+def format_parameters(count):
+    return f"{count} ({count / 1e6:.2f}M, {count / 1e9:.2f}B)"
+
+param_count = count_parameters(model)
+print(f"Total parameters: {format_parameters(param_count)}")
