@@ -109,6 +109,15 @@ def estimate_loss(model, data, batch_size, block_size, eval_iters):
 
 model = BabyGPT(vocab_size, n_embed).to(device)
 
+# Wrap the model with DataParallel for multi-GPU support
+if torch.cuda.device_count() > 1:
+    print(f"Using {torch.cuda.device_count()} GPUs")
+    model = nn.DataParallel(model)
+
+# Set the number of threads for CPU parallelism
+torch.set_num_threads(torch.get_num_threads())  # Adjust this value if needed
+print(f"Using {torch.get_num_threads()} CPU threads")
+
 # 训练
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate) # 优化器，就像教练根据表现调整策略
 
@@ -149,3 +158,20 @@ def format_parameters(count):
 
 param_count = count_parameters(model)
 print(f"Total parameters: {format_parameters(param_count)}")
+
+def calculate_memory_usage(model, batch_size, block_size):
+    # Calculate memory used by model parameters
+    param_memory = sum(p.numel() * p.element_size() for p in model.parameters())
+
+    # Estimate memory used by activations during forward and backward pass
+    activation_memory = batch_size * block_size * n_embed * 4  # Assuming float32 (4 bytes)
+
+    # Total memory usage
+    total_memory = param_memory + activation_memory
+
+    print(f"Model parameters memory: {param_memory / 1e6:.2f} MB")
+    print(f"Activations memory (per batch): {activation_memory / 1e6:.2f} MB")
+    print(f"Total estimated memory (per batch): {total_memory / 1e6:.2f} MB")
+
+# Call the function to calculate memory usage
+calculate_memory_usage(model, batch_size, block_size)
