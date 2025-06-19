@@ -28,9 +28,9 @@ softmax_percentages = softmax(prices)
 
 # Print results
 print("Normalization Results:")
-for i, percentage in enumerate(percentages):
-    print(f"Milk Tea {i + 1}: {percentage * 100:.2f}%")
+for i, (price, percentage) in enumerate(zip(prices, percentages)):
+    print(f"Milk Tea {i + 1} (Price: {price}): {percentage * 100:.2f}%")
 
 print("\nSoftmax Results:")
-for i, percentage in enumerate(softmax_percentages):
-    print(f"Milk Tea {i + 1}: {percentage * 100:.2f}%")
+for i, (price, percentage) in enumerate(zip(prices, softmax_percentages)):
+    print(f"Milk Tea {i + 1} (Price: {price}): {percentage * 100:.2f}%")
