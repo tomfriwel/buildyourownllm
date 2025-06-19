@@ -19,6 +19,7 @@ n_embed = 32 # 嵌入层的维度，决定每个token的向量表示的大小
 tain_data_ratio = 0.9 # 训练数据占数据集的比例，剩下的是验证数据
 
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.mps.is_available() else 'cpu' # 选择设备，优先使用GPU或MPS，如果不可用则使用CPU
+print(f"Using device: {device}") # 打印当前使用的设备
 
 with open('ci.txt', 'r', encoding='utf-8') as f:
     text = f.read()
