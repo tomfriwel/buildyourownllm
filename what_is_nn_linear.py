@@ -3,11 +3,18 @@ import torch.nn as nn
 
 # 定义一个线性层，输入特征维度为3，输出特征维度为2
 linear_layer = nn.Linear(in_features=3, out_features=10)
+# 公式: output = input * W^T + b
+# 其中 W 是权重矩阵，b 是偏置向量，T表示转置操作。
+# eg: input.shape = (1, 3), W.shape = (2, 3), b.shape = (2,)
 
-print("线性层的权重:", linear_layer.weight)
+
+print("线性层的权重W=\n", linear_layer.weight)
+
+# 查看初始化的偏置
+print("初始化的偏置b=\n", linear_layer.bias)
 
 # 创建一个输入张量，形状为 (1, 3)，表示1个样本，3个特征
-input_tensor = torch.tensor([[1.0, 2.0, 3.0]])
+input_tensor = torch.tensor([[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]])
 
 # 通过线性层进行前向传播
 output_tensor = linear_layer(input_tensor)

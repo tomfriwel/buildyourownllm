@@ -40,11 +40,13 @@ class BabyGPT(nn.Module):
 
     def __init__(self, vocab_size: int, n_embd: int):
         super().__init__()
+
+        # 每个num_embeddings对应一个长度为embedding_dim的向量
         self.token_embedding_table = nn.Embedding(
             num_embeddings=vocab_size,
             embedding_dim=n_embd
         ) # 嵌入层，把token映射到n_embd维空间，就像把字母表中的字母映射到一个多维空间中的点
-        
+
         self.lm_head = nn.Linear(
             in_features=n_embd,
             out_features=vocab_size
