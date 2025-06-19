@@ -47,6 +47,7 @@ class BabyGPT(nn.Module):
             embedding_dim=n_embd
         ) # 嵌入层，把token映射到n_embd维空间，就像把字母表中的字母映射到一个多维空间中的点
 
+        # output.shape = (B, T, vocab_size) = (batch_size, sequence_length, vocab_size)
         self.lm_head = nn.Linear(
             in_features=n_embd,
             out_features=vocab_size
@@ -55,7 +56,7 @@ class BabyGPT(nn.Module):
     def forward(self, idx, targets=None):
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)，就像把句子中的每个字母映射到多维空间中的点
         logits = self.lm_head(tok_emb) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)，就像预测每个字母的下一个可能的字母
-
+        print(logits.shape) # 输出logits的形状，调试用
         if targets is None: # 推理场景，不需要计算损失值
             loss = None
         else:
