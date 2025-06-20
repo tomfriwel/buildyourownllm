@@ -156,6 +156,14 @@ for iter in range(max_iters):
     optimizer.zero_grad(set_to_none=True) # 清空梯度，就像擦掉之前的笔记
     loss.backward() # 反向传播，计算梯度，就像教练根据表现给出改进建议
     optimizer.step() # 更新参数，就像学生根据建议调整策略
+    '''
+    token_embedding_table 的嵌入矩阵会被更新，以优化每个 token 的嵌入表示。
+    lm_head 的权重和偏置会被更新，以优化模型的输出预测。
+
+    梯度下降算法之所以被称为“梯度下降”，是因为它的核心思想是通过沿着损失函数梯度的反方向更新模型参数，从而逐步减小损失函数的值。
+    
+    损失函数（Loss Function）是机器学习和深度学习中用来衡量模型预测结果与真实值之间差异的函数。它的值越小，说明模型的预测结果越接近真实值。
+    '''
 
     tokens_processed += batch_size * block_size # 记录处理的token数量
 
