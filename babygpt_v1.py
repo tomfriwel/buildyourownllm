@@ -43,21 +43,42 @@ class BabyGPT(nn.Module):
         super().__init__()
 
         # 每个num_embeddings对应一个长度为embedding_dim的向量
+        # token_embedding_table.weight.shape = (vocab_size, n_embd) = (6148, 32)
         self.token_embedding_table = nn.Embedding(
             num_embeddings=vocab_size,
             embedding_dim=n_embd
         ) # 嵌入层，把token映射到n_embd维空间，就像把字母表中的字母映射到一个多维空间中的点
+        # print(self.token_embedding_table.weight.shape) # 输出嵌入层的权重形状，调试用 torch.Size([6148, 32])
 
         # output.shape = (B, T, vocab_size) = (batch_size, sequence_length, vocab_size)
+        # lm_head.weight.shape = (vocab_size, n_embd) = (6148, 32)
         self.lm_head = nn.Linear(
             in_features=n_embd,
             out_features=vocab_size
         ) # 线性层，把n_embd维空间映射到vocab_size维空间，就像从多维空间回到字母表
 
     def forward(self, idx, targets=None):
+        # idx.shape = (B, T) = (batch_size, sequence_length) = (32, 8)
+        # tok_emb.shape = torch.Size([32, 8, 32])
+        # token_embedding_table.weight.shape = torch.Size([6148, 32])
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)，就像把句子中的每个字母映射到多维空间中的点
+        '''
+        **结果形状的计算**：
+        - 输入 `idx` 的形状是 `(32, 8)`，表示 32 个序列，每个序列有 8 个 token。
+        - 对于每个 token 索引，嵌入层会查找对应的嵌入向量（形状为 `(32,)`）。
+        - 最终，`tok_emb` 的形状是 `(32, 8, 32)`：
+            - `32` 是批次大小。
+            - `8` 是序列长度（8个token）。
+            - `32` 是嵌入维度（每个token对应的嵌入向量）。
+        '''
+
+        # lm_head.shape = (32, 8, 6148)
+        # logits.shape = (32, 8, 6148)
+        # 公式: logits = tok_emb @ lm_head.weight.T + lm_head.bias
+        # (32, 8, 32) @ (32, 6148) -> (32, 8, 6148)
+        # logits[i, j, :] 是第 i 个序列中第 j 个 token 的预测分布。
         logits = self.lm_head(tok_emb) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)，就像预测每个字母的下一个可能的字母
-        # print(logits.shape) # 输出logits的形状，调试用 torch.Size([32, 8, 6148])
+
         if targets is None: # 推理场景，不需要计算损失值
             loss = None
         else:
@@ -111,22 +132,26 @@ def estimate_loss(model, data, batch_size, block_size, eval_iters):
 model = BabyGPT(vocab_size, n_embed).to(device)
 
 # Wrap the model with DataParallel for multi-GPU support
-if torch.cuda.device_count() > 1:
-    print(f"Using {torch.cuda.device_count()} GPUs")
-    model = nn.DataParallel(model)
+# if torch.cuda.device_count() > 1:
+#     print(f"Using {torch.cuda.device_count()} GPUs")
+#     model = nn.DataParallel(model)
 
 # Set the number of threads for CPU parallelism
-torch.set_num_threads(torch.get_num_threads())  # Adjust this value if needed
-print(f"Using {torch.get_num_threads()} CPU threads")
+# torch.set_num_threads(torch.get_num_threads())  # Adjust this value if needed
+# print(f"Using {torch.get_num_threads()} CPU threads")
 
 # 训练
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate) # 优化器，就像教练根据表现调整策略
+
+print(model.parameters)
+exit(0) # 打印模型参数的数量，调试用
 
 start_time = time.time()
 tokens_processed = 0
 
 for iter in range(max_iters):
     x, y = get_batch(data['train'], batch_size, block_size) # 获取一个批次的数据，就像从训练集中抽取一组句子
+    # logits.shape = (32, 8, 6148), loss: scalar
     logits, loss = model(x, y) # 前向传播，计算预测值和损失，就像学生根据教练的策略完成任务并计算表现
     optimizer.zero_grad(set_to_none=True) # 清空梯度，就像擦掉之前的笔记
     loss.backward() # 反向传播，计算梯度，就像教练根据表现给出改进建议
@@ -134,6 +159,7 @@ for iter in range(max_iters):
 
     tokens_processed += batch_size * block_size # 记录处理的token数量
 
+    # 输出训练进度，并不会对模型训练产生影响
     if iter % eval_interval == 0:
         elapsed = time.time() - start_time
         tokens_per_sec = tokens_processed / elapsed if elapsed > 0 else 0 # 计算处理速度
@@ -150,29 +176,3 @@ result = model.generate(prompt_tokens, max_new_token) # 根据提示词生成新
 for tokens in result:
     print(tokenizer.decode(tokens.tolist())) # 把生成的token解码成字符串，就像把字母拼成句子
     print('-'*10)
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-def format_parameters(count):
-    return f"{count} ({count / 1e6:.2f}M, {count / 1e9:.2f}B)"
-
-param_count = count_parameters(model)
-print(f"Total parameters: {format_parameters(param_count)}")
-
-def calculate_memory_usage(model, batch_size, block_size):
-    # Calculate memory used by model parameters
-    param_memory = sum(p.numel() * p.element_size() for p in model.parameters())
-
-    # Estimate memory used by activations during forward and backward pass
-    activation_memory = batch_size * block_size * n_embed * 4  # Assuming float32 (4 bytes)
-
-    # Total memory usage
-    total_memory = param_memory + activation_memory
-
-    print(f"Model parameters memory: {param_memory / 1e6:.2f} MB")
-    print(f"Activations memory (per batch): {activation_memory / 1e6:.2f} MB")
-    print(f"Total estimated memory (per batch): {total_memory / 1e6:.2f} MB")
-
-# Call the function to calculate memory usage
-calculate_memory_usage(model, batch_size, block_size)
