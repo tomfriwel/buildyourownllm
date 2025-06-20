@@ -144,7 +144,6 @@ model = BabyGPT(vocab_size, n_embed).to(device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate) # 优化器，就像教练根据表现调整策略
 
 print(model.parameters)
-exit(0) # 打印模型参数的数量，调试用
 
 start_time = time.time()
 tokens_processed = 0
