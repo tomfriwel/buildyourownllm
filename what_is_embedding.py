@@ -4,7 +4,9 @@ import torch.nn as nn
 # 定义一个嵌入层，颜色类别大小为5，嵌入维度为3（对应RGB值）
 embedding = nn.Embedding(5, 3) # 5种颜色，每种颜色用3个值（R, G, B）表示
 
-print(embedding)
+print(embedding.weight) # 查看嵌入层的权重，初始时是随机的
+
+print(embedding.weight.shape) # 输出嵌入层的权重形状，应该是(5, 3)，表示5个颜色，每个颜色有3个维度的向量
 
 # 输入是一个颜色类别的索引序列
 input_indices = torch.tensor([0, 1, 2, 3, 4]) # 假设索引0-4分别表示红、绿、蓝、黄、紫
