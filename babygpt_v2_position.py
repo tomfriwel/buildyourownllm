@@ -49,7 +49,12 @@ class BabyGPT(nn.Module):
         B, T = idx.shape # B是batch size，T是block size
         T = min(T, self.block_size)
         idx = idx[:, -T:] # 不管输入的序列有多长，我们只取最后的block_size个token
+        
+        # token_embedding_table.weight.shape = (vocab_size, n_embd) = (6148, 32) 每个token对应一个长度为n_embd的向量
+        # tok_emb.shape = (32, 8, 32)
         tok_emb = self.token_embedding_table(idx) # 获得token的嵌入表示 (B,T,n_embd)
+        
+        # pos_emb.shape = (8, 32)
         pos_emb = self.postion_embedding_table(torch.arange(T, device=idx.device)) # 获得位置的嵌入表示 (T,n_embd)
         x = tok_emb + pos_emb # 给token的嵌入表示加上位置的嵌入表示，x有了“位置”信息！
         logits = self.lm_head(x) # 通过线性层，把embedding结果重新映射回vocab_size维空间 (B,T,vocab_size)
